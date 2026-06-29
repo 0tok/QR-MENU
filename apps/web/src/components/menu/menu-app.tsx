@@ -1,6 +1,7 @@
 "use client";
 
 import type { MenuPayload, MenuProduct } from "@/lib/menu";
+import { isSectionEnabled, themeStyle } from "@/lib/theme";
 import { cn, isRtlLanguage, t, type I18nMap } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
@@ -34,7 +35,13 @@ type View = "home" | "saved" | "feedback";
 type Props = {
   menu: MenuPayload;
   tableNumber?: string;
-  joinToken?: string;
+};
+
+const SOCIAL_LABELS: Record<string, string> = {
+  instagram: "Instagram",
+  facebook: "Facebook",
+  tripadvisor: "TripAdvisor",
+  tiktok: "TikTok",
 };
 
 function formatPrice(priceGel: number, currencyCode: string, menu: MenuPayload) {
@@ -83,11 +90,21 @@ export function MenuApp({ menu, tableNumber }: Props) {
   const [selectedProduct, setSelectedProduct] = useState<MenuProduct | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
   const [feedback, setFeedback] = useState("");
-  const [feedbackSent, setFeedbackSent] = useState(false);
+  const [feedbackError, setFeedbackError] = useState(false);
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [toast, setToast] = useState("");
 
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
   const rtl = isRtlLanguage(lang, menu.settings.languages);
+  // Use venue-level mapsUrl first, fall back to org-level settings
+  const mapsUrl = menu.location.mapsUrl ?? menu.settings.location.mapsUrl;
+  const themeSections = menu.theme?.sections;
+
+  const showHeader = isSectionEnabled(themeSections, "header");
+  const showSelectors = isSectionEnabled(themeSections, "selectors");
+  const showBanners = isSectionEnabled(themeSections, "banners");
+  const showCategoryNav = isSectionEnabled(themeSections, "category-nav");
+  const showProductGrid = isSectionEnabled(themeSections, "product-grid");
 
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -105,12 +122,16 @@ export function MenuApp({ menu, tableNumber }: Props) {
     }
   }, [storageKey]);
 
+  // Auto-dismiss toast after 2.2 s
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(""), 2200);
+    return () => clearTimeout(timer);
+  }, [toast]);
+
   const ui = menu.ui as Record<string, Record<string, I18nMap>>;
   const savedProducts = useMemo(
-    () =>
-      menu.categories
-        .flatMap((c) => c.products)
-        .filter((p) => savedIds.has(p.id)),
+    () => menu.categories.flatMap((c) => c.products).filter((p) => savedIds.has(p.id)),
     [menu.categories, savedIds]
   );
 
@@ -118,11 +139,14 @@ export function MenuApp({ menu, tableNumber }: Props) {
     sectionRefs.current[slug]?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  // Scroll-spy: highlight category nav pill matching the visible section
   useEffect(() => {
-    const sections = menu.categories
+    if (view !== "home") return;
+
+    const categorySections = menu.categories
       .map((c) => sectionRefs.current[c.slug])
       .filter(Boolean) as HTMLElement[];
-    if (!sections.length) return;
+    if (!categorySections.length) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -136,10 +160,11 @@ export function MenuApp({ menu, tableNumber }: Props) {
       { rootMargin: "-120px 0px -55% 0px", threshold: [0.15, 0.4, 0.7] }
     );
 
-    sections.forEach((s) => observer.observe(s));
+    categorySections.forEach((s) => observer.observe(s));
     return () => observer.disconnect();
-  }, [menu.categories]);
+  }, [menu.categories, view]);
 
+  // Share via Web Share API; fall back to clipboard
   const shareMenu = async () => {
     const url = window.location.href;
     const shareUi = ui.share;
@@ -156,200 +181,276 @@ export function MenuApp({ menu, tableNumber }: Props) {
       await navigator.clipboard.writeText(url);
       setToast(t(shareUi?.copied, lang, "Link copied"));
     } catch {
-      setToast(url);
+      /* user cancelled */
+    }
+    setMoreOpen(false);
+  };
+
+  // Copy link — separate from share so both actions are always visible
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setToast(t(ui.share?.copied, lang, "Link copied"));
+    } catch {
+      setToast(window.location.href);
     }
     setMoreOpen(false);
   };
 
   const submitFeedback = async () => {
     const text = feedback.trim();
-    if (!text) return;
-    const res = await fetch("/api/feedback", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        orgSlug: menu.organization.slug,
-        locationSlug: menu.location.slug,
-        text,
-        tableNumber,
-      }),
-    });
-    if (res.ok) {
-      setFeedback("");
-      setFeedbackSent(true);
-      setTimeout(() => setFeedbackSent(false), 3000);
+    if (!text || feedbackLoading) return;
+
+    setFeedbackLoading(true);
+    setFeedbackError(false);
+
+    try {
+      const res = await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orgSlug: menu.organization.slug,
+          locationSlug: menu.location.slug,
+          text,
+          tableNumber,
+        }),
+      });
+
+      if (res.ok) {
+        setFeedback("");
+        setToast(t(ui.feedback?.success, lang, "Feedback sent!"));
+        setView("home");
+      } else {
+        setFeedbackError(true);
+      }
+    } catch {
+      setFeedbackError(true);
+    } finally {
+      setFeedbackLoading(false);
     }
   };
 
   const badgeLabel = (key: string) => t(menu.badgeLabels[key], lang, key);
+  const saveLabel = (saved: boolean) =>
+    saved ? t(ui.nav?.saved, lang, "Saved") : t(ui.product?.save, lang, "Save");
 
   return (
-    <div className="pb-20">
-      {/* Header */}
-      <header className="sticky top-0 z-40 flex h-13 items-center justify-between border-b border-border/80 bg-background/95 px-4 backdrop-blur-md">
-        <div className="flex min-w-0 items-center gap-2">
-          <Image src={menu.organization.logoUrl ?? "/logo.svg"} alt="" width={32} height={32} className="shrink-0" />
-          <span className="truncate text-[0.9375rem] font-semibold tracking-tight">
-            {t(menu.organization.name, lang)}
-          </span>
-        </div>
-        <div className="flex shrink-0 items-center">
-          {menu.organization.social?.instagram && (
-            <a href={menu.organization.social.instagram} target="_blank" rel="noopener noreferrer" className="inline-flex size-9 items-center justify-center rounded-md hover:bg-muted" aria-label="Instagram">
-              <Link2 className="size-4.5" />
-            </a>
-          )}
-          {menu.organization.social?.facebook && (
-            <a href={menu.organization.social.facebook} target="_blank" rel="noopener noreferrer" className="inline-flex size-9 items-center justify-center rounded-md hover:bg-muted" aria-label="Facebook">
-              <Link2 className="size-4.5" />
-            </a>
-          )}
-          {menu.settings.location.mapsUrl && (
-            <a href={menu.settings.location.mapsUrl} target="_blank" rel="noopener noreferrer" className="inline-flex size-9 items-center justify-center rounded-md hover:bg-muted" aria-label="Location">
-              <MapPin className="size-4.5" />
-            </a>
-          )}
-          <button type="button" onClick={() => setMoreOpen(true)} className="inline-flex size-9 items-center justify-center rounded-md hover:bg-muted" aria-label="More">
-            <MoreHorizontal className="size-4.5" />
-          </button>
-        </div>
-      </header>
+    // Apply theme tokens (primary color, border-radius) as CSS custom properties
+    <div style={themeStyle(menu.theme?.tokens)} className="pb-20">
+      {showHeader && (
+        <header className="sticky top-0 z-40 flex h-13 items-center justify-between border-b border-border/80 bg-background/95 px-4 backdrop-blur-md">
+          <div className="flex min-w-0 items-center gap-2">
+            <Image
+              src={menu.organization.logoUrl ?? "/logo.svg"}
+              alt={t(menu.organization.name, lang)}
+              width={32}
+              height={32}
+              className="shrink-0"
+            />
+            <div className="min-w-0">
+              <span className="block truncate text-[0.9375rem] font-semibold tracking-tight">
+                {t(menu.organization.name, lang)}
+              </span>
+              {menu.organization.tagline && (
+                <span className="block truncate text-[0.6875rem] text-muted-foreground">
+                  {t(menu.organization.tagline, lang)}
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center">
+            {Object.entries(menu.organization.social ?? {}).map(([key, url]) =>
+              url ? (
+                <a
+                  key={key}
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex size-9 items-center justify-center rounded-md hover:bg-muted"
+                  aria-label={SOCIAL_LABELS[key] ?? key}
+                >
+                  <Link2 className="size-4.5" />
+                </a>
+              ) : null
+            )}
+            {mapsUrl && (
+              <a
+                href={mapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex size-9 items-center justify-center rounded-md hover:bg-muted"
+                aria-label={t(ui.more?.location, lang, "Location")}
+              >
+                <MapPin className="size-4.5" />
+              </a>
+            )}
+            <button
+              type="button"
+              onClick={() => setMoreOpen(true)}
+              className="inline-flex size-9 items-center justify-center rounded-md hover:bg-muted"
+              aria-label={t(ui.more?.title, lang, "More")}
+            >
+              <MoreHorizontal className="size-4.5" />
+            </button>
+          </div>
+        </header>
+      )}
 
-      {/* Selectors */}
-      <div className="flex h-11 items-center justify-between gap-2 border-b px-4">
-        <Select
-          value={currency}
-          onValueChange={(v) => {
-            if (!v) return;
-            setCurrency(v);
-            localStorage.setItem(`${storageKey}:currency`, v);
-          }}
-        >
-          <SelectTrigger className="h-8 w-auto gap-1 border-0 bg-muted px-2.5 text-xs font-medium shadow-none">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {menu.settings.currencies.map((c) => (
-              <SelectItem key={c.code} value={c.code}>
-                {c.code} {c.symbol}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      {showSelectors && (
+        <>
+          <div className="flex h-11 items-center justify-between gap-2 border-b px-4">
+            <Select
+              value={currency}
+              onValueChange={(v) => {
+                if (!v) return;
+                setCurrency(v);
+                localStorage.setItem(`${storageKey}:currency`, v);
+              }}
+            >
+              <SelectTrigger className="h-8 w-auto gap-1 border-0 bg-muted px-2.5 text-xs font-medium shadow-none">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {menu.settings.currencies.map((c) => (
+                  <SelectItem key={c.code} value={c.code}>
+                    {c.code} {c.symbol}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-        {tableNumber && (
-          <span className="rounded-md bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
-            {t(ui.table?.label, lang, "Table")} {tableNumber}
-          </span>
-        )}
+            {tableNumber && (
+              <Badge variant="secondary" className="text-xs font-medium">
+                {t(ui.table?.label, lang, "Table")} {tableNumber}
+              </Badge>
+            )}
 
-        <Select
-          value={lang}
-          onValueChange={(v) => {
-            if (!v) return;
-            setLang(v);
-            localStorage.setItem(`${storageKey}:lang`, v);
-          }}
-        >
-          <SelectTrigger className="h-8 w-auto gap-1 border-0 bg-muted px-2.5 text-xs font-medium shadow-none">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {menu.settings.languages.map((l) => (
-              <SelectItem key={l.code} value={l.code}>
-                {l.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+            <Select
+              value={lang}
+              onValueChange={(v) => {
+                if (!v) return;
+                setLang(v);
+                localStorage.setItem(`${storageKey}:lang`, v);
+              }}
+            >
+              <SelectTrigger className="h-8 w-auto gap-1 border-0 bg-muted px-2.5 text-xs font-medium shadow-none">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {menu.settings.languages.map((l) => (
+                  <SelectItem key={l.code} value={l.code}>
+                    {l.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {currency !== "GEL" && menu.settings.fxNote && (
+            <p className="border-b px-4 py-1.5 text-center text-[0.625rem] text-muted-foreground">
+              {t(menu.settings.fxNote, lang)}
+            </p>
+          )}
+        </>
+      )}
 
       {view === "home" && (
         <>
-          <nav className="sticky top-13 z-30 border-b bg-background/95 backdrop-blur-md">
-            <div className="flex gap-2 overflow-x-auto px-4 py-2.5 [scrollbar-width:none]">
-              {menu.categories.map((cat) => (
-                <button
-                  key={cat.slug}
-                  type="button"
-                  onClick={() => scrollToCategory(cat.slug)}
-                  className={cn(
-                    "shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors",
-                    activeCategory === cat.slug
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border text-muted-foreground"
-                  )}
-                >
-                  {t(cat.name, lang)}
-                </button>
-              ))}
-            </div>
-          </nav>
-
-          <div className="space-y-3 p-4">
-            {menu.banners.map((banner) => (
-              <article
-                key={banner.slug}
-                className={cn(
-                  "grid gap-3.5 overflow-hidden rounded-xl border bg-card p-3.5 shadow-sm",
-                  banner.layout === "image-right" ? "grid-cols-[1fr_7.5rem]" : "grid-cols-[7.5rem_1fr]"
-                )}
-              >
-                <div className={cn("relative h-22 overflow-hidden rounded-lg", banner.layout === "image-right" && "order-2")}>
-                  <Image src={banner.imageUrl} alt="" fill className="object-cover" sizes="120px" />
-                </div>
-                <div className={banner.layout === "image-right" ? "order-1" : ""}>
-                  {banner.subheading && (
-                    <p className="mb-0.5 text-[0.6875rem] font-semibold uppercase tracking-wide text-primary">
-                      {t(banner.subheading, lang)}
-                    </p>
-                  )}
-                  <h2 className="text-base font-semibold tracking-tight">{t(banner.heading, lang)}</h2>
-                  {banner.text && (
-                    <p className="mt-1 text-xs leading-snug text-muted-foreground">{t(banner.text, lang)}</p>
-                  )}
-                </div>
-              </article>
-            ))}
-          </div>
-
-          {menu.categories.map((cat) => (
-            <section
-              key={cat.slug}
-              id={`category-${cat.slug}`}
-              ref={(el) => {
-                sectionRefs.current[cat.slug] = el;
-              }}
-              className="scroll-mt-28 px-4 pb-4"
+          {showCategoryNav && (
+            <nav
+              className={cn(
+                "sticky z-30 border-b bg-background/95 backdrop-blur-md",
+                showHeader ? "top-13" : "top-0"
+              )}
             >
-              <div className="mb-3">
-                <h2 className="text-lg font-semibold tracking-tight">{t(cat.name, lang)}</h2>
-                {cat.description && (
-                  <p className="text-xs text-muted-foreground">{t(cat.description, lang)}</p>
-                )}
-              </div>
-              <div className="flex flex-col gap-2.5">
-                {cat.products.map((product) => (
-                  <ProductRow
-                    key={product.id}
-                    product={product}
-                    lang={lang}
-                    currency={currency}
-                    menu={menu}
-                    saved={isSaved(product.id)}
-                    unavailable={product.availability === "UNAVAILABLE"}
-                    price={formatPrice(product.priceGel, currency, menu)}
-                    badgeLabel={badgeLabel}
-                    onOpen={() => setSelectedProduct(product)}
-                    onToggleSave={(e) => {
-                      e.stopPropagation();
-                      toggleSaved(product.id);
-                    }}
-                  />
+              <div className="flex gap-2 overflow-x-auto px-4 py-2.5 [scrollbar-width:none]">
+                {menu.categories.map((cat) => (
+                  <button
+                    key={cat.slug}
+                    type="button"
+                    onClick={() => scrollToCategory(cat.slug)}
+                    className={cn(
+                      "shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors",
+                      activeCategory === cat.slug
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border text-muted-foreground"
+                    )}
+                  >
+                    {t(cat.name, lang)}
+                  </button>
                 ))}
               </div>
-            </section>
-          ))}
+            </nav>
+          )}
+
+          {showBanners && menu.banners.length > 0 && (
+            <div className="space-y-3 p-4">
+              {menu.banners.map((banner) => (
+                <article
+                  key={banner.slug}
+                  className={cn(
+                    "grid gap-3.5 overflow-hidden rounded-xl border bg-card p-3.5 shadow-sm",
+                    banner.layout === "image-right" ? "grid-cols-[1fr_7.5rem]" : "grid-cols-[7.5rem_1fr]"
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "relative h-22 overflow-hidden rounded-lg",
+                      banner.layout === "image-right" && "order-2"
+                    )}
+                  >
+                    <Image src={banner.imageUrl} alt="" fill className="object-cover" sizes="120px" />
+                  </div>
+                  <div className={banner.layout === "image-right" ? "order-1" : ""}>
+                    {banner.subheading && (
+                      <p className="mb-0.5 text-[0.6875rem] font-semibold uppercase tracking-wide text-primary">
+                        {t(banner.subheading, lang)}
+                      </p>
+                    )}
+                    <h2 className="text-base font-semibold tracking-tight">{t(banner.heading, lang)}</h2>
+                    {banner.text && (
+                      <p className="mt-1 text-xs leading-snug text-muted-foreground">{t(banner.text, lang)}</p>
+                    )}
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+
+          {showProductGrid &&
+            menu.categories.map((cat) => (
+              <section
+                key={cat.slug}
+                id={`category-${cat.slug}`}
+                ref={(el) => {
+                  sectionRefs.current[cat.slug] = el;
+                }}
+                className="scroll-mt-28 px-4 pb-4"
+              >
+                <div className="mb-3">
+                  <h2 className="text-lg font-semibold tracking-tight">{t(cat.name, lang)}</h2>
+                  {cat.description && (
+                    <p className="text-xs text-muted-foreground">{t(cat.description, lang)}</p>
+                  )}
+                </div>
+                <div className="flex flex-col gap-2.5">
+                  {cat.products.map((product) => (
+                    <ProductRow
+                      key={product.id}
+                      product={product}
+                      lang={lang}
+                      saved={isSaved(product.id)}
+                      unavailable={product.availability === "UNAVAILABLE"}
+                      price={formatPrice(product.priceGel, currency, menu)}
+                      badgeLabel={badgeLabel}
+                      saveLabel={saveLabel(isSaved(product.id))}
+                      onOpen={() => setSelectedProduct(product)}
+                      onToggleSave={() => toggleSaved(product.id)}
+                    />
+                  ))}
+                </div>
+              </section>
+            ))}
         </>
       )}
 
@@ -367,17 +468,13 @@ export function MenuApp({ menu, tableNumber }: Props) {
                   key={product.id}
                   product={product}
                   lang={lang}
-                  currency={currency}
-                  menu={menu}
                   saved
                   unavailable={product.availability === "UNAVAILABLE"}
                   price={formatPrice(product.priceGel, currency, menu)}
                   badgeLabel={badgeLabel}
+                  saveLabel={saveLabel(true)}
                   onOpen={() => setSelectedProduct(product)}
-                  onToggleSave={(e) => {
-                    e.stopPropagation();
-                    toggleSaved(product.id);
-                  }}
+                  onToggleSave={() => toggleSaved(product.id)}
                 />
               ))}
             </div>
@@ -391,24 +488,33 @@ export function MenuApp({ menu, tableNumber }: Props) {
           <div className="flex flex-col gap-3">
             <textarea
               value={feedback}
-              onChange={(e) => setFeedback(e.target.value)}
+              onChange={(e) => {
+                setFeedback(e.target.value);
+                setFeedbackError(false);
+              }}
               placeholder={t(ui.feedback?.placeholder, lang)}
               className="min-h-36 w-full rounded-xl border bg-background p-3 text-sm outline-none ring-primary focus:ring-2"
               maxLength={1000}
+              disabled={feedbackLoading}
             />
-            {feedbackSent && (
-              <p className="rounded-xl border border-primary/20 bg-primary/10 p-3 text-sm text-primary">
-                {t(ui.feedback?.success, lang)}
+            {feedbackError && (
+              <p className="rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
+                {t(ui.feedback?.error, lang, "Could not send feedback. Please try again.")}
               </p>
             )}
-            <Button onClick={submitFeedback} disabled={!feedback.trim()} className="h-11">
-              {t(ui.feedback?.submit, lang, "Send")}
+            <Button
+              onClick={submitFeedback}
+              disabled={!feedback.trim() || feedbackLoading}
+              className="h-11"
+            >
+              {feedbackLoading
+                ? t(ui.feedback?.sending, lang, "Sending…")
+                : t(ui.feedback?.submit, lang, "Send")}
             </Button>
           </div>
         </div>
       )}
 
-      {/* Bottom nav */}
       <nav className="fixed inset-x-0 bottom-0 z-50 mx-auto grid max-w-[430px] grid-cols-3 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md">
         {(["home", "saved", "feedback"] as const).map((tab) => {
           const icons = { home: Home, saved: Heart, feedback: MessageSquare };
@@ -436,7 +542,7 @@ export function MenuApp({ menu, tableNumber }: Props) {
         })}
       </nav>
 
-      {/* Product sheet */}
+      {/* Product detail sheet */}
       <Sheet open={!!selectedProduct} onOpenChange={(open) => !open && setSelectedProduct(null)}>
         <SheetContent side="bottom" className="max-h-[88dvh] rounded-t-2xl px-4 pb-8">
           {selectedProduct && (
@@ -446,7 +552,13 @@ export function MenuApp({ menu, tableNumber }: Props) {
               </SheetHeader>
               {selectedProduct.imageUrl && (
                 <div className="relative mt-3 h-44 w-full overflow-hidden rounded-xl">
-                  <Image src={selectedProduct.imageUrl} alt="" fill className="object-cover" sizes="400px" />
+                  <Image
+                    src={selectedProduct.imageUrl}
+                    alt={t(selectedProduct.name, lang)}
+                    fill
+                    className="object-cover"
+                    sizes="400px"
+                  />
                 </div>
               )}
               <div className="mt-3 flex flex-wrap gap-1.5">
@@ -480,48 +592,48 @@ export function MenuApp({ menu, tableNumber }: Props) {
                 onClick={() => toggleSaved(selectedProduct.id)}
               >
                 <Heart className={cn("me-2 size-4", isSaved(selectedProduct.id) && "fill-current")} />
-                {isSaved(selectedProduct.id) ? "Saved" : "Save"}
+                {saveLabel(isSaved(selectedProduct.id))}
               </Button>
             </>
           )}
         </SheetContent>
       </Sheet>
 
-      {/* More sheet */}
+      {/* More options sheet */}
       <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
         <SheetContent side="bottom" className="rounded-t-2xl pb-8">
           <SheetHeader>
             <SheetTitle>{t(ui.more?.title, lang, "More")}</SheetTitle>
           </SheetHeader>
           <div className="mt-4 flex flex-col gap-1">
+            {/* Share via native share sheet (device share) */}
             <Button variant="ghost" className="h-12 justify-start gap-3" onClick={shareMenu}>
               <Share2 className="size-4.5 text-muted-foreground" />
-              {t(ui.more?.share, lang)}
+              {t(ui.more?.share, lang, "Share")}
             </Button>
-            {menu.settings.location.mapsUrl && (
+            {/* Copy link to clipboard — distinct from share */}
+            <Button variant="ghost" className="h-12 justify-start gap-3" onClick={copyLink}>
+              <Link2 className="size-4.5 text-muted-foreground" />
+              {t(ui.share?.copy, lang, "Copy link")}
+            </Button>
+            {mapsUrl && (
               <a
-                href={menu.settings.location.mapsUrl}
+                href={mapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex h-12 w-full items-center justify-start gap-3 rounded-md px-3 text-sm hover:bg-muted"
               >
                 <MapPin className="size-4.5 text-muted-foreground" />
-                {t(ui.more?.location, lang)}
+                {t(ui.more?.location, lang, "Location")}
               </a>
             )}
-            <Button variant="ghost" className="h-12 justify-start gap-3" onClick={shareMenu}>
-              <Share2 className="size-4.5 text-muted-foreground" />
-              {t(ui.share?.copy, lang, "Copy link")}
-            </Button>
           </div>
         </SheetContent>
       </Sheet>
 
+      {/* Toast — auto-dismissed after 2.2 s */}
       {toast && (
-        <div
-          className="fixed inset-x-4 bottom-24 z-50 mx-auto max-w-[400px] rounded-xl border bg-background p-3 text-center text-sm font-medium shadow-md"
-          onAnimationEnd={() => setToast("")}
-        >
+        <div className="fixed inset-x-4 bottom-24 z-50 mx-auto max-w-[400px] rounded-xl border bg-background p-3 text-center text-sm font-medium shadow-md">
           {toast}
         </div>
       )}
@@ -529,6 +641,13 @@ export function MenuApp({ menu, tableNumber }: Props) {
   );
 }
 
+/**
+ * Product card with independent save (heart) button.
+ *
+ * Layout: flex row — [main button: image + text] [heart button]
+ * The heart button is a sibling of the main button, never nested inside it,
+ * which keeps the DOM valid and prevents event conflicts.
+ */
 function ProductRow({
   product,
   lang,
@@ -536,64 +655,77 @@ function ProductRow({
   unavailable,
   price,
   badgeLabel,
+  saveLabel,
   onOpen,
   onToggleSave,
 }: {
   product: MenuProduct;
   lang: string;
-  currency: string;
-  menu: MenuPayload;
   saved: boolean;
   unavailable: boolean;
   price: string;
   badgeLabel: (key: string) => string;
+  saveLabel: string;
   onOpen: () => void;
-  onToggleSave: (e: React.MouseEvent) => void;
+  onToggleSave: () => void;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onOpen}
-      disabled={unavailable}
+    <article
       className={cn(
-        "grid w-full grid-cols-[20%_1fr_auto] gap-3 rounded-xl border bg-card p-2.5 text-start shadow-sm transition-shadow active:scale-[0.995]",
+        "flex w-full items-center gap-3 rounded-xl border bg-card p-2.5 shadow-sm transition-shadow",
         unavailable && "opacity-50",
-        "hover:shadow-md"
+        !unavailable && "hover:shadow-md"
       )}
     >
-      <div className="relative aspect-square overflow-hidden rounded-lg bg-muted">
-        {product.imageUrl && (
-          <Image src={product.imageUrl} alt="" fill className="object-cover" sizes="80px" />
-        )}
-      </div>
-      <div className="min-w-0">
-        <h3 className="text-[0.9375rem] font-semibold leading-snug tracking-tight">
-          {t(product.name, lang)}
-        </h3>
-        <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
-          {t(product.description, lang)}
-        </p>
-        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-          <span className="text-sm font-semibold">{price}</span>
-          {product.badges.map((b) => (
-            <Badge key={b} variant="secondary" className="px-1.5 py-0 text-[0.625rem] uppercase">
-              {badgeLabel(b)}
-            </Badge>
-          ))}
+      {/* Main tap area: image + text. Opens product detail sheet. */}
+      <button
+        type="button"
+        onClick={onOpen}
+        disabled={unavailable}
+        aria-label={t(product.name, lang)}
+        className="flex min-w-0 flex-1 items-start gap-3 text-start"
+      >
+        <div className="relative aspect-square w-16 shrink-0 overflow-hidden rounded-lg bg-muted">
+          {product.imageUrl && (
+            <Image
+              src={product.imageUrl}
+              alt={t(product.name, lang)}
+              fill
+              className="object-cover"
+              sizes="80px"
+            />
+          )}
         </div>
-      </div>
-      <span
-        role="button"
-        tabIndex={0}
+        <div className="min-w-0 flex-1">
+          <h3 className="text-[0.9375rem] font-semibold leading-snug tracking-tight">
+            {t(product.name, lang)}
+          </h3>
+          <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
+            {t(product.description, lang)}
+          </p>
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+            <span className="text-sm font-semibold">{price}</span>
+            {product.badges.map((b) => (
+              <Badge key={b} variant="secondary" className="px-1.5 py-0 text-[0.625rem] uppercase">
+                {badgeLabel(b)}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      </button>
+
+      {/* Heart save button — sibling of the main button, never nested inside it */}
+      <button
+        type="button"
         onClick={onToggleSave}
-        onKeyDown={(e) => e.key === "Enter" && onToggleSave(e as unknown as React.MouseEvent)}
+        aria-label={saveLabel}
         className={cn(
-          "inline-flex size-9 items-center justify-center rounded-full text-muted-foreground hover:bg-muted",
+          "inline-flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted",
           saved && "text-rose-600"
         )}
       >
         <Heart className={cn("size-4.5", saved && "fill-current")} />
-      </span>
-    </button>
+      </button>
+    </article>
   );
 }
