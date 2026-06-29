@@ -2,8 +2,13 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "QR Menu",
-  description: "Digital restaurant menu",
+  title: {
+    template: "%s | QR Menu",
+    default: "QR Menu — Digital Restaurant Menus",
+  },
+  description: "Scan, browse, and enjoy — beautiful digital menus for modern restaurants.",
+  applicationName: "QR Menu",
+  robots: { index: true, follow: true },
 };
 
 export const viewport: Viewport = {
