@@ -1,0 +1,326 @@
+{
+  "restaurant": {
+    "slug": "demo-restaurant",
+    "venueId": "v1",
+    "name": {
+      "en": "Samani Kitchen",
+      "ka": "სამანი",
+      "ar": "مطبخ ساماني"
+    },
+    "tagline": {
+      "en": "Modern Georgian dining",
+      "ka": "თანამედროვე ქართული სამზარეულო",
+      "ar": "مطبخ جورجي عصري"
+    },
+    "logo": "../../assets/images/logo.svg",
+    "social": {
+      "instagram": "https://instagram.com/",
+      "facebook": "https://facebook.com/",
+      "tripadvisor": "https://tripadvisor.com/",
+      "tiktok": "https://tiktok.com/"
+    },
+    "location": {
+      "label": {
+        "en": "Find us",
+        "ka": "მოგვძებნეთ",
+        "ar": "اعثر علينا"
+      },
+      "address": {
+        "en": "14 Rustaveli Ave, Tbilisi",
+        "ka": "რუსთაველის გამზ. 14, თბილისი",
+        "ar": "شارع روستافيلي 14، تبليسي"
+      },
+      "mapsUrl": "https://maps.google.com/?q=41.6938,44.8015"
+    },
+    "currencies": [
+      { "code": "GEL", "symbol": "₾", "rate": 1 },
+      { "code": "USD", "symbol": "$", "rate": 0.3788 }
+    ],
+    "defaultCurrency": "GEL",
+    "languages": [
+      { "code": "en", "label": "English", "rtl": false },
+      { "code": "ka", "label": "ქართული", "rtl": false },
+      { "code": "ar", "label": "العربية", "rtl": true }
+    ],
+    "defaultLanguage": "en",
+    "fxNote": {
+      "en": "USD converted at ₾1 = $0.3788 (rate 2.64)",
+      "ka": "USD კონვერტაცია ₾1 = $0.3788 (კურსი 2.64)",
+      "ar": "تحويل الدولار بسعر 2.64"
+    }
+  },
+  "banners": [
+    {
+      "id": "welcome",
+      "enabled": true,
+      "layout": "image-left",
+      "heading": {
+        "en": "Chef's tasting week",
+        "ka": "შეფის დეგუსტაციის კვირა",
+        "ar": "أسبوع تذوق الشيف"
+      },
+      "subheading": {
+        "en": "Limited seasonal plates",
+        "ka": "სეზონური კერძები",
+        "ar": "أطباق موسمية محدودة"
+      },
+      "text": {
+        "en": "Ask your server about the five-course pairing menu.",
+        "ka": "გაიგეთ ხუთკურსიანი მენიუს შესახებ.",
+        "ar": "اسأل النادل عن قائمة الأطباق الخمسة."
+      },
+      "image": "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&h=280&fit=crop"
+    },
+    {
+      "id": "wine",
+      "enabled": true,
+      "layout": "image-right",
+      "heading": {
+        "en": "Georgian wine cellar",
+        "ka": "ქართული ღვინის მარანი",
+        "ar": "قبو النبيذ الجورجي"
+      },
+      "subheading": {
+        "en": "Qvevri selections",
+        "ka": "ქვევრის ღვინოები",
+        "ar": "اختيارات قفري"
+      },
+      "text": {
+        "en": "Organic amber wines poured by the glass.",
+        "ka": "ორგანული ფერადი ღვინოები ჭიქით.",
+        "ar": "نبيذ عنبري عضوي يُقدّم بالكأس."
+      },
+      "image": "https://images.unsplash.com/photo-1510812431400-5740424a8a2b?w=400&h=280&fit=crop"
+    }
+  ],
+  "categories": [
+    {
+      "id": "starters",
+      "name": {
+        "en": "Starters",
+        "ka": "სალათები და საწყისი",
+        "ar": "المقبلات"
+      },
+      "description": {
+        "en": "Bright plates to open the meal",
+        "ka": "ფერადი კერძები დასაწყისისთვის",
+        "ar": "أطباق منعشة لبداية الوجبة"
+      },
+      "items": [
+        {
+          "id": "khachapuri",
+          "name": {
+            "en": "Adjarian Khachapuri",
+            "ka": "აჭარული ხაჭაპური",
+            "ar": "خاشابوري أدجاري"
+          },
+          "description": {
+            "en": "Boat-shaped bread, molten imeruli cheese, farm egg, cultured butter.",
+            "ka": "გემოვანი ყველით, კვერცხით და კარაქით.",
+            "ar": "خبز على شكل قارب مع جبن وبيض وزبدة."
+          },
+          "priceGel": 18,
+          "image": "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=240&h=240&fit=crop",
+          "badges": ["popular", "vegetarian"]
+        },
+        {
+          "id": "pkhali",
+          "name": {
+            "en": "Spinach Pkhali",
+            "ka": "ისპანახის ფხალი",
+            "ar": "بخالي السبانخ"
+          },
+          "description": {
+            "en": "Walnut-garlic spread, pomegranate jewels, shotis puri crisps.",
+            "ka": "კაშკაშლის მარცვლით და ნიგვზის სოუსით.",
+            "ar": "سبانخ مع صلصة الجوز والرمان."
+          },
+          "priceGel": 14,
+          "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=240&h=240&fit=crop",
+          "badges": ["vegan", "gluten-free"]
+        }
+      ]
+    },
+    {
+      "id": "mains",
+      "name": {
+        "en": "Main courses",
+        "ka": "მთავარი კერძები",
+        "ar": "الأطباق الرئيسية"
+      },
+      "description": {
+        "en": "Hearty plates for every craving",
+        "ka": "გემრიელი მთავარი კერძები",
+        "ar": "أطباق مشبعة لكل الأذواق"
+      },
+      "items": [
+        {
+          "id": "chakapuli",
+          "name": {
+            "en": "Lamb Chakapuli",
+            "ka": "ჩაქაფული",
+            "ar": "تشاكابولي لحم الضأن"
+          },
+          "description": {
+            "en": "Spring lamb, tkemali plum, tarragon, slow braised until silky.",
+            "ka": "ჩაქაფული ტყემალით და ტარხუნით.",
+            "ar": "لحم ضأن مطبوخ ببطء مع البرقوق والطرخون."
+          },
+          "priceGel": 32,
+          "image": "https://images.unsplash.com/photo-1544025162-d76694265947?w=240&h=240&fit=crop",
+          "badges": ["chef-choice"]
+        },
+        {
+          "id": "ostri",
+          "name": {
+            "en": "Beef Ostri",
+            "ka": "ოსტრი",
+            "ar": "أوستري لحم البقر"
+          },
+          "description": {
+            "en": "Peppered beef stew, coriander, adjika heat, mashed potatoes.",
+            "ka": "სიგნალური სიცხარით და კარტოფილის პიურეთი.",
+            "ar": "يخنة لحم بقري حارة مع البطاطا المهروسة."
+          },
+          "priceGel": 28,
+          "image": "https://images.unsplash.com/photo-1600891964092-4316c288032e?w=240&h=240&fit=crop",
+          "badges": ["spicy"]
+        },
+        {
+          "id": "trout",
+          "name": {
+            "en": "River Trout",
+            "ka": "კალმახი",
+            "ar": "سمك السلمون المرقط"
+          },
+          "description": {
+            "en": "Whole trout, jonjoli pickles, lemon, herb oil.",
+            "ka": "მთლიანი კალმახი ჯონჯოლით.",
+            "ar": "سمك سلمون مرقط كامل مع الأعشاب والليمون."
+          },
+          "priceGel": 26,
+          "image": "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=240&h=240&fit=crop",
+          "badges": ["new"]
+        }
+      ]
+    },
+    {
+      "id": "desserts",
+      "name": {
+        "en": "Desserts",
+        "ka": "დესერტები",
+        "ar": "الحلويات"
+      },
+      "description": {
+        "en": "Sweet finishes from our pastry counter",
+        "ka": "ტკბილი დასასრული",
+        "ar": "لمسات حلوة من المخبز"
+      },
+      "items": [
+        {
+          "id": "churchkhela",
+          "name": {
+            "en": "Churchkhela",
+            "ka": "ჩურჩხელა",
+            "ar": "تشورشخيلا"
+          },
+          "description": {
+            "en": "Walnut strands in grape must caramel, sliced to order.",
+            "ka": "ჩურჩხელა ნიგვზით.",
+            "ar": "خيوط الجوز في كراميل عصير العنب."
+          },
+          "priceGel": 9,
+          "image": "https://images.unsplash.com/photo-1488477181941-6428a0291777?w=240&h=240&fit=crop",
+          "badges": ["vegetarian"]
+        }
+      ]
+    },
+    {
+      "id": "drinks",
+      "name": {
+        "en": "Beverages",
+        "ka": "სასმელები",
+        "ar": "المشروبات"
+      },
+      "description": {
+        "en": "Cool drinks to refresh your day",
+        "ka": "გამაგრილებელი სასმელები",
+        "ar": "مشروبات منعشة"
+      },
+      "items": [
+        {
+          "id": "lemonade",
+          "name": {
+            "en": "Tarragon Lemonade",
+            "ka": "ტარხუნის ლიმონათი",
+            "ar": "ليمونادة الطرخون"
+          },
+          "description": {
+            "en": "House-made, lightly sparkling, citrus and herb finish.",
+            "ka": "სახლის ლიმონათი ტარხუნით.",
+            "ar": "ليموناضة منزلية مع نكهة الحمضيات والأعشاب."
+          },
+          "priceGel": 7,
+          "image": "https://images.unsplash.com/photo-1523672890676-84a0863b82f5?w=240&h=240&fit=crop",
+          "badges": ["vegan"]
+        }
+      ]
+    }
+  ],
+  "badges": {
+    "popular": { "en": "Popular", "ka": "პოპულარული", "ar": "شائع" },
+    "vegetarian": { "en": "Vegetarian", "ka": "ვეგეტარიანული", "ar": "نباتي" },
+    "vegan": { "en": "Vegan", "ka": "ვეგანური", "ar": "نباتي صرف" },
+    "gluten-free": { "en": "Gluten free", "ka": "უგლუტენო", "ar": "خالٍ من الغلوتين" },
+    "spicy": { "en": "Spicy", "ka": "ცხარე", "ar": "حار" },
+    "new": { "en": "New", "ka": "ახალი", "ar": "جديد" },
+    "chef-choice": { "en": "Chef's choice", "ka": "შეფის არჩევანი", "ar": "اختيار الشيف" }
+  },
+  "ui": {
+    "nav": {
+      "home": { "en": "Home", "ka": "მთავარი", "ar": "الرئيسية" },
+      "saved": { "en": "Saved", "ka": "შენახული", "ar": "المحفوظ" },
+      "feedback": { "en": "Feedback", "ka": "გამოხმაურება", "ar": "ملاحظات" }
+    },
+    "saved": {
+      "title": { "en": "Saved items", "ka": "შენახული კერძები", "ar": "العناصر المحفوظة" },
+      "empty": {
+        "en": "Tap the heart on any dish to save it for later.",
+        "ka": "დააჭირეთ გულს კერძის შესანახად.",
+        "ar": "اضغط على القلب لحفظ أي طبق."
+      }
+    },
+    "feedback": {
+      "title": { "en": "Share feedback", "ka": "გამოგვიგზავნეთ გამოხმაურება", "ar": "شاركنا رأيك" },
+      "placeholder": {
+        "en": "Tell us about your visit — food, service, atmosphere…",
+        "ka": "მოგვიყევით თქვენი გამოცდილების შესახებ…",
+        "ar": "أخبرنا عن تجربتك — الطعام، الخدمة، الأجواء…"
+      },
+      "submit": { "en": "Send feedback", "ka": "გაგზავნა", "ar": "إرسال" },
+      "success": {
+        "en": "Thank you — your note was saved for the team.",
+        "ka": "გმადლობთ — თქვენი შეტყობინება მიღებულია.",
+        "ar": "شكرًا — تم حفظ ملاحظتك للفريق."
+      }
+    },
+    "share": {
+      "title": { "en": "Share menu", "ka": "გაზიარება", "ar": "مشاركة القائمة" },
+      "text": {
+        "en": "Check out the menu at Samani Kitchen",
+        "ka": "იხილეთ სამანის მენიუ",
+        "ar": "اطلع على قائمة مطبخ ساماني"
+      },
+      "copy": { "en": "Copy link", "ka": "ბმულის კოპირება", "ar": "نسخ الرابط" },
+      "copied": { "en": "Link copied", "ka": "დაკოპირდა", "ar": "تم النسخ" }
+    },
+    "more": {
+      "title": { "en": "More", "ka": "მეტი", "ar": "المزيد" },
+      "share": { "en": "Share with friends", "ka": "მეგობრებთან გაზიარება", "ar": "شارك مع الأصدقاء" },
+      "location": { "en": "Restaurant location", "ka": "რესტორნის მისამართი", "ar": "موقع المطعم" }
+    },
+    "table": {
+      "label": { "en": "Table", "ka": "მაგიდა", "ar": "طاولة" }
+    }
+  }
+}
