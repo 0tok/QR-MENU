@@ -34,7 +34,7 @@ export default async function MenuPage({ params, searchParams }: PageProps) {
 
   return (
     <main
-      className="mx-auto min-h-dvh max-w-[430px] bg-background shadow-[0_0_0_1px_var(--border)]"
+      className="mx-auto min-h-dvh max-w-[28rem] bg-background shadow-[0_0_0_1px_var(--border)]"
       style={themeStyle(menu.theme?.tokens)}
     >
       <MenuApp menu={menu} tableNumber={table} />

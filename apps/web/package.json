@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build --webpack && npm run postbuild:standalone",
-    "postbuild:standalone": "mkdir -p .next/standalone/.next && cp -r .next/static .next/standalone/.next/static && cp -r public .next/standalone/public",
-    "start": "node .next/standalone/server.js",
+    "postbuild:standalone": "mkdir -p .next/standalone/.next && cp -r .next/static .next/standalone/.next/static && cp -r public .next/standalone/public && (cp .env .next/standalone/.env 2>/dev/null || true)",
+    "start": "cd .next/standalone && node server.js",
     "preview": "npm run build && HOSTNAME=0.0.0.0 PORT=3000 npm run start",
     "lint": "eslint",
     "db:migrate": "prisma migrate dev",
