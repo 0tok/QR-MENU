@@ -1,53 +1,27 @@
 # QR-MENU
 
-Digital QR menu platform for restaurants — customer-facing menu first, admin & backend later.
+Digital QR menu platform for restaurants.
 
-## Prototype (HTML)
-
-Static mobile-first prototype with mock JSON data.
-
-### Local preview
+## Customer app (Next.js + PostgreSQL)
 
 ```bash
-# From repo root — any static server works
-npx serve .
-# or: python3 -m http.server 8080
+docker compose up -d          # Postgres
+cd apps/web && npm install
+cp .env.example .env
+npm run db:migrate && npm run db:seed
+npm run dev
 ```
 
-Open:
+**Demo menu:** http://localhost:3000/demo-restaurant/v1?table=3
 
-- [http://localhost:3000/demo-restaurant/v1/](http://localhost:3000/demo-restaurant/v1/)
-- With table param: [http://localhost:3000/demo-restaurant/v1/?table=3](http://localhost:3000/demo-restaurant/v1/?table=3)
+See [apps/web/README.md](./apps/web/README.md) for full docs.
 
-### GitHub Pages
+## HTML prototype (legacy)
 
-After merge to `main`, the workflow deploys the static site.
-
-Live URL pattern:
-
-```text
-https://<user>.github.io/QR-MENU/demo-restaurant/v1/?table=3
-```
-
-Future production URL pattern:
-
-```text
-https://domain.com/demo-restaurant/v1?table=3
-```
-
-## Project structure
-
-```text
-demo-restaurant/v1/   # Customer menu entry (venue v1)
-assets/               # CSS, JS, images
-data/                 # Mock restaurant JSON
-DESIGN_NOTES.md       # Taste + preferences log
-PROTOTYPE_DECISIONS.md
-REACT_MIGRATION.md    # Plan to rewrite in React + shadcn
-```
+Static prototype at `demo-restaurant/v1/` for GitHub Pages — superseded by the Next.js app for active development.
 
 ## Docs
 
+- [Web app](./apps/web/README.md)
 - [Design notes](./DESIGN_NOTES.md)
-- [Prototype decisions](./PROTOTYPE_DECISIONS.md)
-- [React migration plan](./REACT_MIGRATION.md)
+- [Agent skills](./SKILLS.md)

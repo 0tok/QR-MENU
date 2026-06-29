@@ -43,6 +43,7 @@ Prices stored in **GEL** as source of truth; USD computed via configured rate (l
 3. Save button inside product card uses nested click — stopPropagation handled in JS
 4. Feedback stored locally only (console-visible in localStorage)
 5. Social links are placeholders (`#` replaced from JSON if URLs set)
+6. GitHub Pages uses `gh-pages` branch deploy — enable once in repo Settings → Pages
 
 ### Next steps after approval
 
