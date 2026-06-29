@@ -21,13 +21,24 @@ Open:
 
 ### GitHub Pages
 
-After merge to `main`, the workflow deploys the static site.
+The workflow pushes the static site to the **`gh-pages`** branch on every push to `main`.
 
-Live URL pattern:
+#### One-time setup (required)
+
+1. Open **https://github.com/0tok/QR-MENU/settings/pages**
+2. Under **Build and deployment → Source**, choose **Deploy from a branch**
+3. Branch: **`gh-pages`** / folder: **`/ (root)`**
+4. Save
+
+After the first successful workflow run, the site will be live at:
 
 ```text
-https://<user>.github.io/QR-MENU/demo-restaurant/v1/?table=3
+https://0tok.github.io/QR-MENU/demo-restaurant/v1/?table=3
 ```
+
+> **Note:** The official “GitHub Actions” Pages source must be enabled manually in Settings and does not auto-enable from workflows alone. This project uses the **`gh-pages` branch** method instead — it only needs the one-time branch selection above.
+
+If deploy fails with permissions errors, go to **Settings → Actions → General → Workflow permissions** and enable **Read and write permissions**.
 
 Future production URL pattern:
 
