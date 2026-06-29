@@ -1,7 +1,13 @@
 "use client";
 
 import { Share2, Link2, MapPin, Globe } from "lucide-react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+} from "@/components/ui/drawer";
 import { safeHttpUrl } from "@/lib/utils";
 import { useMenu } from "./menu-context";
 
@@ -48,12 +54,15 @@ export function MoreSheet({ open, onClose }: { open: boolean; onClose: () => voi
     "flex h-12 w-full items-center gap-3 rounded-xl px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted";
 
   return (
-    <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent side="bottom" className="rounded-t-3xl px-4 pb-7">
-        <SheetHeader className="px-1">
-          <SheetTitle className="text-base font-bold">{tx("more", "title", "More")}</SheetTitle>
-        </SheetHeader>
-        <div className="mt-2 flex flex-col gap-0.5">
+    <Drawer open={open} onOpenChange={(o) => !o && onClose()}>
+      <DrawerContent className="mx-auto max-w-[28rem]">
+        <DrawerHeader className="px-4 pb-1 text-start md:text-start">
+          <DrawerTitle className="text-base font-bold">{tx("more", "title", "More")}</DrawerTitle>
+          <DrawerDescription className="sr-only">
+            {t(menu.organization.name)}
+          </DrawerDescription>
+        </DrawerHeader>
+        <div className="flex flex-col gap-0.5 px-4 pb-7">
           <button type="button" onClick={share} className={itemClass}>
             <Share2 className="size-[1.1rem] text-muted-foreground" />
             {tx("more", "share", "Share")}
@@ -75,7 +84,7 @@ export function MoreSheet({ open, onClose }: { open: boolean; onClose: () => voi
             </a>
           ))}
         </div>
-      </SheetContent>
-    </Sheet>
+      </DrawerContent>
+    </Drawer>
   );
 }

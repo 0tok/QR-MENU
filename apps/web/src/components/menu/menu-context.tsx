@@ -1,12 +1,12 @@
 "use client";
 
 import { createContext, useContext, useMemo, type ReactNode } from "react";
+import { toast } from "sonner";
 import type { MenuPayload, MenuProduct } from "@/lib/menu";
 import { formatPrice as formatPriceRaw } from "@/lib/format";
 import { isRtlLanguage, t as translate, type I18nMap } from "@/lib/utils";
 import { usePersistedValue } from "@/hooks/use-local-storage";
 import { useSavedItems } from "@/hooks/use-saved-items";
-import { useToast } from "@/hooks/use-toast";
 
 type UiLabels = Record<string, Record<string, I18nMap>>;
 
@@ -36,7 +36,6 @@ type MenuContextValue = {
     products: MenuProduct[];
   };
 
-  toast: string;
   showToast: (text: string) => void;
 };
 
@@ -66,7 +65,6 @@ export function MenuProvider({
   );
 
   const savedItems = useSavedItems(`${prefsKey}:saved`);
-  const { message: toast, show: showToast } = useToast();
 
   const ui = menu.ui as UiLabels;
   const rtl = isRtlLanguage(lang, menu.settings.languages);
@@ -96,10 +94,9 @@ export function MenuProvider({
         toggle: savedItems.toggle,
         products: savedProducts,
       },
-      toast,
-      showToast,
+      showToast: (text: string) => toast(text),
     };
-  }, [menu, tableNumber, lang, currency, rtl, setLang, setCurrency, ui, savedItems, toast, showToast]);
+  }, [menu, tableNumber, lang, currency, rtl, setLang, setCurrency, ui, savedItems]);
 
   return <MenuContext.Provider value={value}>{children}</MenuContext.Provider>;
 }

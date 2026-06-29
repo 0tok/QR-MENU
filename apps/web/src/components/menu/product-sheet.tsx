@@ -4,7 +4,13 @@ import Image from "next/image";
 import { Heart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+} from "@/components/ui/drawer";
 import { cn } from "@/lib/utils";
 import type { MenuProduct } from "@/lib/menu";
 import { useMenu } from "./menu-context";
@@ -20,10 +26,10 @@ export function ProductSheet({
   const isSaved = product ? saved.has(product.id) : false;
 
   return (
-    <Sheet open={!!product} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent side="bottom" className="max-h-[90dvh] gap-0 overflow-y-auto rounded-t-3xl p-0">
+    <Drawer open={!!product} onOpenChange={(open) => !open && onClose()}>
+      <DrawerContent className="mx-auto max-w-[28rem]">
         {product && (
-          <>
+          <div className="overflow-y-auto">
             {product.imageUrl && (
               <div className="relative h-52 w-full shrink-0">
                 <Image
@@ -39,11 +45,14 @@ export function ProductSheet({
             )}
 
             <div className="px-5 pb-7 pt-4">
-              <SheetHeader className="p-0">
-                <SheetTitle className="text-xl font-bold tracking-tight">
+              <DrawerHeader className="p-0 text-start md:text-start">
+                <DrawerTitle className="text-xl font-bold tracking-tight">
                   {t(product.name)}
-                </SheetTitle>
-              </SheetHeader>
+                </DrawerTitle>
+                <DrawerDescription className="sr-only">
+                  {t(product.description)}
+                </DrawerDescription>
+              </DrawerHeader>
 
               {product.badges.length > 0 && (
                 <div className="mt-2.5 flex flex-wrap gap-1.5">
@@ -91,9 +100,9 @@ export function ProductSheet({
                 </Button>
               </div>
             </div>
-          </>
+          </div>
         )}
-      </SheetContent>
-    </Sheet>
+      </DrawerContent>
+    </Drawer>
   );
 }

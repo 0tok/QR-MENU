@@ -12,12 +12,15 @@ import { FeedbackView } from "./feedback-view";
 import { BottomNav, type MenuView } from "./bottom-nav";
 import { ProductSheet } from "./product-sheet";
 import { MoreSheet } from "./more-sheet";
-import { MenuToast } from "./menu-toast";
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 export function MenuApp({ menu, tableNumber }: { menu: MenuPayload; tableNumber?: string }) {
   return (
     <MenuProvider menu={menu} tableNumber={tableNumber}>
-      <MenuShell />
+      <TooltipProvider>
+        <MenuShell />
+      </TooltipProvider>
     </MenuProvider>
   );
 }
@@ -61,7 +64,7 @@ function MenuShell() {
       <BottomNav view={view} onChange={setView} />
       <ProductSheet product={selectedProduct} onClose={() => setSelectedProduct(null)} />
       <MoreSheet open={moreOpen} onClose={() => setMoreOpen(false)} />
-      <MenuToast />
+      <Toaster position="bottom-center" offset={88} mobileOffset={88} />
     </div>
   );
 }
