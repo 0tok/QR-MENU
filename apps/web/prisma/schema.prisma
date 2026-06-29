@@ -1,0 +1,202 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ProductAvailability {
+  ACTIVE
+  HIDDEN
+  UNAVAILABLE
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      Json
+  tagline   Json?
+  logoUrl   String?
+  social    Json?
+  settings  Json     @default("{}")
+  badgeLabels Json   @default("{}")
+  uiLabels  Json     @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  locations         Location[]
+  categories        Category[]
+  products          Product[]
+  banners           Banner[]
+  fieldDefinitions  ProductFieldDefinition[]
+  theme             MenuTheme?
+}
+
+model Location {
+  id             String   @id @default(cuid())
+  organizationId String
+  slug           String
+  name           Json?
+  address        Json?
+  mapsUrl        String?
+  isActive       Boolean  @default(true)
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization              @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  overrides    LocationProductOverride[]
+  sharedLists  TableSharedList[]
+
+  @@unique([organizationId, slug])
+  @@index([organizationId])
+}
+
+model Category {
+  id             String   @id @default(cuid())
+  organizationId String
+  slug           String
+  sortOrder      Int      @default(0)
+  name           Json
+  description    Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  products     Product[]
+
+  @@unique([organizationId, slug])
+  @@index([organizationId, sortOrder])
+}
+
+model Product {
+  id             String              @id @default(cuid())
+  organizationId String
+  categoryId     String
+  slug           String
+  sortOrder      Int                 @default(0)
+  name           Json
+  description    Json
+  priceGel       Decimal             @db.Decimal(10, 2)
+  imageUrl       String?
+  badges         String[]            @default([])
+  availability   ProductAvailability @default(ACTIVE)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  organization Organization              @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  category     Category                  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  fieldValues  ProductFieldValue[]
+  overrides    LocationProductOverride[]
+  listItems    TableListItem[]
+
+  @@unique([organizationId, slug])
+  @@index([organizationId, categoryId])
+}
+
+model LocationProductOverride {
+  id               String               @id @default(cuid())
+  locationId       String
+  productId        String
+  priceGelOverride Decimal?             @db.Decimal(10, 2)
+  availability     ProductAvailability?
+
+  location Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([locationId, productId])
+}
+
+model ProductFieldDefinition {
+  id             String  @id @default(cuid())
+  organizationId String
+  key            String
+  label          Json
+  fieldType      String  @default("text")
+  showOnMenu     Boolean @default(true)
+  sortOrder      Int     @default(0)
+
+  organization Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  values       ProductFieldValue[]
+
+  @@unique([organizationId, key])
+}
+
+model ProductFieldValue {
+  id        String @id @default(cuid())
+  productId String
+  fieldId   String
+  value     Json
+
+  product Product                @relation(fields: [productId], references: [id], onDelete: Cascade)
+  field   ProductFieldDefinition @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, fieldId])
+}
+
+model Banner {
+  id             String  @id @default(cuid())
+  organizationId String
+  slug           String
+  enabled        Boolean @default(true)
+  layout         String  @default("image-left")
+  heading        Json
+  subheading     Json?
+  text           Json?
+  imageUrl       String
+  sortOrder      Int     @default(0)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, slug])
+}
+
+model MenuTheme {
+  id             String @id @default(cuid())
+  organizationId String @unique
+  presetId       String @default("nova")
+  tokens         Json   @default("{}")
+  sections       Json   @default("[]")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+model TableSharedList {
+  id         String   @id @default(cuid())
+  locationId String
+  tableNumber String
+  joinToken  String   @unique
+  status     String   @default("active")
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime?
+
+  location Location        @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  items    TableListItem[]
+
+  @@index([locationId, tableNumber, status])
+}
+
+model TableListItem {
+  id        String   @id @default(cuid())
+  listId    String
+  productId String
+  sessionId String?
+  createdAt DateTime @default(now())
+
+  list    TableSharedList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  product Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([listId])
+}
+
+model Feedback {
+  id          String   @id @default(cuid())
+  locationId  String
+  tableNumber String?
+  text        String
+  createdAt   DateTime @default(now())
+
+  @@index([locationId])
+}
