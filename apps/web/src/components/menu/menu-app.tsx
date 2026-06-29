@@ -2,7 +2,7 @@
 
 import type { MenuPayload, MenuProduct } from "@/lib/menu";
 import { isSectionEnabled, themeStyle } from "@/lib/theme";
-import { cn, isRtlLanguage, t, type I18nMap } from "@/lib/utils";
+import { cn, isRtlLanguage, safeHttpUrl, t, type I18nMap } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import {
@@ -97,7 +97,7 @@ export function MenuApp({ menu, tableNumber }: Props) {
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
   const rtl = isRtlLanguage(lang, menu.settings.languages);
   // Use venue-level mapsUrl first, fall back to org-level settings
-  const mapsUrl = menu.location.mapsUrl ?? menu.settings.location.mapsUrl;
+  const mapsUrl = safeHttpUrl(menu.location.mapsUrl ?? menu.settings.location.mapsUrl);
   const themeSections = menu.theme?.sections;
 
   const showHeader = isSectionEnabled(themeSections, "header");
@@ -259,11 +259,12 @@ export function MenuApp({ menu, tableNumber }: Props) {
             </div>
           </div>
           <div className="flex shrink-0 items-center">
-            {Object.entries(menu.organization.social ?? {}).map(([key, url]) =>
-              url ? (
+            {Object.entries(menu.organization.social ?? {}).map(([key, url]) => {
+              const safeUrl = safeHttpUrl(url);
+              return safeUrl ? (
                 <a
                   key={key}
-                  href={url}
+                  href={safeUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex size-9 items-center justify-center rounded-md hover:bg-muted"
@@ -271,8 +272,8 @@ export function MenuApp({ menu, tableNumber }: Props) {
                 >
                   <Link2 className="size-4.5" />
                 </a>
-              ) : null
-            )}
+              ) : null;
+            })}
             {mapsUrl && (
               <a
                 href={mapsUrl}

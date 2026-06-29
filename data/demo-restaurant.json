@@ -90,7 +90,7 @@
         "ka": "ორგანული ფერადი ღვინოები ჭიქით.",
         "ar": "نبيذ عنبري عضوي يُقدّم بالكأس."
       },
-      "image": "https://images.unsplash.com/photo-1510812431400-5740424a8a2b?w=400&h=280&fit=crop"
+      "image": "https://images.unsplash.com/photo-1544025162-d76694265947?w=400&h=280&fit=crop"
     }
   ],
   "categories": [
@@ -230,7 +230,7 @@
             "ar": "خيوط الجوز في كراميل عصير العنب."
           },
           "priceGel": 9,
-          "image": "https://images.unsplash.com/photo-1488477181941-6428a0291777?w=240&h=240&fit=crop",
+          "image": "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=240&h=240&fit=crop",
           "badges": ["vegetarian"]
         }
       ]
@@ -261,7 +261,7 @@
             "ar": "ليموناضة منزلية مع نكهة الحمضيات والأعشاب."
           },
           "priceGel": 7,
-          "image": "https://images.unsplash.com/photo-1523672890676-84a0863b82f5?w=240&h=240&fit=crop",
+          "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=240&h=240&fit=crop",
           "badges": ["vegan"]
         }
       ]
@@ -298,11 +298,20 @@
         "ar": "أخبرنا عن تجربتك — الطعام، الخدمة، الأجواء…"
       },
       "submit": { "en": "Send feedback", "ka": "გაგზავნა", "ar": "إرسال" },
+      "sending": { "en": "Sending…", "ka": "იგზავნება…", "ar": "جارٍ الإرسال…" },
       "success": {
         "en": "Thank you — your note was saved for the team.",
         "ka": "გმადლობთ — თქვენი შეტყობინება მიღებულია.",
         "ar": "شكرًا — تم حفظ ملاحظتك للفريق."
+      },
+      "error": {
+        "en": "Could not send feedback. Please try again.",
+        "ka": "გამოხმაურების გაგზავნა ვერ მოხერხდა.",
+        "ar": "تعذر إرسال الملاحظة. حاول مرة أخرى."
       }
+    },
+    "product": {
+      "save": { "en": "Save", "ka": "შენახვა", "ar": "حفظ" }
     },
     "share": {
       "title": { "en": "Share menu", "ka": "გაზიარება", "ar": "مشاركة القائمة" },

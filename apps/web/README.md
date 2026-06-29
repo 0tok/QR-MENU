@@ -1,46 +1,61 @@
 # QR Menu — Web App
 
-Next.js customer-facing menu with PostgreSQL + Prisma.
+Production customer-facing menu (Next.js 16 + PostgreSQL + Prisma).
 
-## Quick start
+## Development
 
 ```bash
-# From repo root — start Postgres (or use local install)
-docker compose up -d
+# From repo root
+docker compose up -d postgres
 
 cd apps/web
 cp .env.example .env
 npm install
-npx prisma migrate dev
+npm run db:migrate
 npm run db:seed
 npm run dev
 ```
 
-Open:
-
-- http://localhost:3000/demo-restaurant/v1?table=3
+- Menu: http://localhost:3000/demo-restaurant/v1?table=3
 - API: http://localhost:3000/api/menu/demo-restaurant/v1
+- Health: http://localhost:3000/api/health
+
+## Production build
+
+```bash
+npm run build
+npm run db:migrate:deploy
+npm run start
+```
+
+Or use Docker from repo root:
+
+```bash
+docker compose up --build
+docker compose exec web npx prisma db seed   # first run
+```
 
 ## Scripts
 
 | Command | Description |
 |---------|-------------|
 | `npm run dev` | Dev server |
-| `npm run build` | Production build |
-| `npm run db:migrate` | Run migrations |
-| `npm run db:seed` | Seed mock Samani Kitchen data |
+| `npm run build` | Production build (standalone) |
+| `npm run start` | Start production server |
+| `npm run db:migrate` | Dev migrations |
+| `npm run db:migrate:deploy` | Production migrations |
+| `npm run db:seed` | Seed demo Samani Kitchen data |
 | `npm run db:reset` | Reset DB + reseed |
 
 ## Routes
 
 | Path | Description |
 |------|-------------|
-| `/[slug]/[venue]` | Customer menu |
-| `/api/menu/[slug]/[venue]` | Menu JSON API |
+| `/[slug]/[venue]` | Customer menu (`?table=3`) |
+| `/api/menu/[slug]/[venue]` | Menu JSON (60s cache) |
 | `/api/feedback` | POST guest feedback |
+| `/api/health` | DB health check |
 
 ## Data
 
-Seed loads from `/data/demo-restaurant.json` into PostgreSQL.
-
-Custom product fields (calories, prep time, allergens) are seeded on select dishes.
+Seed loads from `/data/demo-restaurant.json`. Custom product fields (calories, prep time, allergens) are on select dishes.
