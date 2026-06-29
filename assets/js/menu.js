@@ -354,9 +354,19 @@ async function shareMenu() {
   }
 }
 
+function getStickyOffsetPx() {
+  const header = $(".header");
+  const categoryNav = $(".category-nav");
+  const headerPx = header?.offsetHeight ?? 52;
+  const categoryPx = categoryNav?.offsetHeight ?? 48;
+  return headerPx + categoryPx;
+}
+
 function setupCategoryObserver() {
   const sections = $$(".category-section");
   if (!sections.length) return;
+
+  const topOffset = getStickyOffsetPx();
 
   const observer = new IntersectionObserver(
     (entries) => {
@@ -373,7 +383,7 @@ function setupCategoryObserver() {
       activePill?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
     },
     {
-      rootMargin: `-${getComputedStyle(document.documentElement).getPropertyValue("--header-height").trim()} -${getComputedStyle(document.documentElement).getPropertyValue("--category-height").trim()} 0px 0px`,
+      rootMargin: `-${topOffset}px 0px -55% 0px`,
       threshold: [0.15, 0.4, 0.7],
     }
   );

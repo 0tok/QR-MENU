@@ -56,3 +56,4 @@ _(Add entries as we iterate)_
 - Don't use user geolocation for “location” — restaurant address only
 - Don't add star ratings to feedback
 - When migrating to React, preserve URL contract: `/{slug}/{venue}?table=`
+- `IntersectionObserver` `rootMargin` must use `px` or `%` — never raw CSS variables like `3.25rem`
