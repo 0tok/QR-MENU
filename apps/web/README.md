@@ -22,11 +22,20 @@ npm run dev
 
 ## Production build
 
+**Important:** Use the webpack build (`npm run build`). Next.js 16 Turbopack builds can reference JS chunks that are missing on disk, which leaves you with static HTML and no interactivity.
+
 ```bash
 npm run build
-npm run db:migrate:deploy
-npm run start
+HOSTNAME=0.0.0.0 PORT=3000 npm run start
 ```
+
+Or one command:
+
+```bash
+npm run preview
+```
+
+**Do not** expose `npm run dev` through Cloudflare tunnel — HMR/WebSocket fails through quick tunnels and the page will not hydrate reliably.
 
 Or use Docker from repo root:
 
